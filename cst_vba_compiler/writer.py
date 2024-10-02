@@ -242,7 +242,7 @@ class VbaWriter(object):
                     val_type: str = "Double"
                 case int():
                     # Check if the value does not exceed 16-bit range
-                    if value <= 2**16 - 1:
+                    if value >= -(2**15) and value <= 2**15 - 1:
                         val_type: str = "Integer"
                     else:
                         raise ValueError(
