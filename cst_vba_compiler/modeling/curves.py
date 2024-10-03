@@ -10,52 +10,6 @@ from ..writer import VbaWriter
 
 class Curves:
     @staticmethod
-    def Line(
-        writer: VbaWriter,
-        name: str,
-        start_point: tuple[float | str, float | str],
-        end_point: tuple[float | str, float | str],
-        curve: str = "curve",
-    ) -> None:
-        """Create a 2D line in the xy-plane called `name` in the Curves folder under the name `curve`
-        starting from `start_point` and ending at `end_point`.
-
-        See: https://space.mit.edu/RADIO/CST_online/mergedProjects/3D/common_struct/common_struct_curveline.htm
-
-        :param writer: VBA IO handler
-        :type writer: VbaWriter
-        :param name: Name of the created Line
-        :type name: str
-        :param start_point: Tuple of numeric values (`float`) and/or parameter names (`str`) containing the $(x,y)$ values at which the Line
-            starts.
-        :type start_point: tuple[float | str, float | str]
-        :param end_point: Tuple of numeric values (`float`) and/or parameter names (`str`) containing the $(x,y)$ values at which the Line ends.
-        :type end_point: tuple[float | str, float | str]
-        :param curve: Name of the folder under Curves where the Line is stored.
-        :type curve: str (default="curve")
-        """
-        # Start the `With` block
-        writer.start_with(structure="Line")
-        # Default line that always appears for some reason
-        writer.write(text=".Reset\n")
-        # Set the name of the line
-        writer.write(text=f".Name {VbaWriter.string_repr(text=name)}\n")
-        # Set the name of the curve
-        writer.write(text=f".Curve {VbaWriter.string_repr(text=curve)}\n")
-        # Set x-coordinate of first point
-        writer.write(text=f".X1 {wrap_nonstr_in_double_quotes(value=start_point[0])}\n")
-        # Set y-coordinate of first point
-        writer.write(text=f".Y1 {wrap_nonstr_in_double_quotes(value=start_point[1])}\n")
-        # Set x-coordinate of second point
-        writer.write(text=f".X2 {wrap_nonstr_in_double_quotes(value=end_point[0])}\n")
-        # Set y-coordinate of second point
-        writer.write(text=f".Y2 {wrap_nonstr_in_double_quotes(value=end_point[1])}\n")
-        # Create the line
-        writer.write(text=f".Create\n")
-        # End the `With` block
-        writer.end_with()
-
-    @staticmethod
     def Ellipse(
         writer: VbaWriter,
         name: str,
@@ -112,6 +66,127 @@ class Curves:
         # Create the curve
         writer.write(text=".Create\n")
         # End the `With` block
+        writer.end_with()
+
+    @staticmethod
+    def Line(
+        writer: VbaWriter,
+        name: str,
+        start_point: tuple[float | str, float | str],
+        end_point: tuple[float | str, float | str],
+        curve: str = "curve",
+    ) -> None:
+        """Create a 2D line in the xy-plane called `name` in the Curves folder under the name `curve`
+        starting from `start_point` and ending at `end_point`.
+
+        See: https://space.mit.edu/RADIO/CST_online/mergedProjects/3D/common_struct/common_struct_curveline.htm
+
+        :param writer: VBA IO handler
+        :type writer: VbaWriter
+        :param name: Name of the created Line
+        :type name: str
+        :param start_point: Tuple of numeric values (`float`) and/or parameter names (`str`) containing the $(x,y)$ values at which the Line
+            starts.
+        :type start_point: tuple[float | str, float | str]
+        :param end_point: Tuple of numeric values (`float`) and/or parameter names (`str`) containing the $(x,y)$ values at which the Line ends.
+        :type end_point: tuple[float | str, float | str]
+        :param curve: Name of the folder under Curves where the Line is stored.
+        :type curve: str (default="curve")
+        """
+        # Start the `With` block
+        writer.start_with(structure="Line")
+        # Default line that always appears for some reason
+        writer.write(text=".Reset\n")
+        # Set the name of the line
+        writer.write(text=f".Name {VbaWriter.string_repr(text=name)}\n")
+        # Set the name of the curve
+        writer.write(text=f".Curve {VbaWriter.string_repr(text=curve)}\n")
+        # Set x-coordinate of first point
+        writer.write(text=f".X1 {wrap_nonstr_in_double_quotes(value=start_point[0])}\n")
+        # Set y-coordinate of first point
+        writer.write(text=f".Y1 {wrap_nonstr_in_double_quotes(value=start_point[1])}\n")
+        # Set x-coordinate of second point
+        writer.write(text=f".X2 {wrap_nonstr_in_double_quotes(value=end_point[0])}\n")
+        # Set y-coordinate of second point
+        writer.write(text=f".Y2 {wrap_nonstr_in_double_quotes(value=end_point[1])}\n")
+        # Create the line
+        writer.write(text=f".Create\n")
+        # End the `With` block
+        writer.end_with()
+
+    @staticmethod
+    def Polygon(
+        writer: VbaWriter,
+        name: str,
+        start_point: tuple[float | str, float | str],
+        next_points: list[tuple[float | str, float | str]],
+        which_relative: list[bool] | None = None,
+        curve: str = "curve",
+    ) -> None:
+        """
+        Create a 2D polygon curve, the curve starts at `start_point` and connects the `next_points` in lines, e.g.
+        `start_point` is connected to `next_points[0]`, which is connection to `next_points[1]` etc. By default, each
+        point in the `next_points` list is assumed to be an absolute point. It is also possible to interpret a point in
+        `next_points` as relative to the previous point. A point will be interpreted as relative, if the index for said point
+        in the `which_relative` list is set to `True`, e.g. if point `next_points[i]` needs to be interpreted as relative,
+        `which_relative[i]` should be `True`, otherwise it should be `False`.
+
+        See: https://space.mit.edu/RADIO/CST_online/mergedProjects/VBA_3D/common_vbacurves/common_vbacurves_polygon_object.htm
+
+        :param writer: VBA IO handler
+        :type writer: VbaWriter
+        :param name: Name of the created line
+        :type name: str
+        :param start_point: Starting $(x,y)$ point of the polygonal curve, specified as a tuple of numeric values (`float`) and/or
+            parameter names (`str`).
+        :type start_point: tuple[float | str, float | str]
+        :param next_points: List of points in the same format as `start_point` that connect, in sequence, to form the polygonal curve.
+        :type next_points: list[tuple[float | str, float | str]]
+        :param which_relative: List of boolean values specifying which points should be interpreted as relative to the previous point (`True`) and
+            which as absolute points (`False`). If set the `None` (the default value), it is equivalent to having a list of `False` values. Note that
+            the length of the list should be of equal length as the `next_points` list.
+        :type which_relative: list[bool] | None (default=None)
+        :param curve: Name of the folder under Curves where the Polygon is stored.
+        :type curve: str (default="curve")
+        """
+        # Check that at least one connecting point is given
+        assert (
+            len(next_points) >= 1
+        ), "At least one connecting point is needed to define a Polygon Curve."
+        # If `which_relative` is `None`, interpret as array of `False` values
+        if which_relative is None:
+            which_relative: list[bool] = [False for _ in range(len(next_points))]
+        else:
+            # Check that every connecting point has an interpretation
+            assert len(next_points) == len(
+                which_relative
+            ), "Length of `next_points` array is not equal to the length of `which_relative` array."
+
+        # Start `With` block
+        writer.start_with(structure="Polygon")
+        # Write reset line
+        writer.write(".Reset\n")
+        # Set name of curve
+        writer.write(f".Name {VbaWriter.string_repr(text=name)}\n")
+        # Set the name of the curve
+        writer.write(text=f".Curve {VbaWriter.string_repr(text=curve)}\n")
+        # Set starting point
+        writer.write(
+            f".Point {wrap_nonstr_in_double_quotes(value=start_point[0])}, {wrap_nonstr_in_double_quotes(value=start_point[1])}\n"
+        )
+        # Write connecting point lines
+        for point, is_relative in zip(next_points, which_relative):
+            if is_relative:
+                writer.write(
+                    f".RLine {wrap_nonstr_in_double_quotes(value=point[0])}, {wrap_nonstr_in_double_quotes(value=point[1])}\n"
+                )
+            else:
+                writer.write(
+                    f".LineTo {wrap_nonstr_in_double_quotes(value=point[0])}, {wrap_nonstr_in_double_quotes(value=point[1])}\n"
+                )
+        # Create Polygon
+        writer.write(".Create\n")
+        # End `With` block
         writer.end_with()
 
     @staticmethod
