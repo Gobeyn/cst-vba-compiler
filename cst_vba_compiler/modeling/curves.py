@@ -1,7 +1,6 @@
 """ Python interface for the CST methods under Modeling -> Curves
 
 author: Aaron Gobeyn
-date: 01-10-2024
 """
 
 from ..utils import num_or_list_of_nums_to_str, wrap_nonstr_in_double_quotes
@@ -194,8 +193,8 @@ class Curves:
         writer: VbaWriter,
         curve_item_1: str,
         curve_item_2: str,
-        delete_edges_1: int | list[int],
-        delete_edges_2: int | list[int],
+        delete_edges_1: int | list[int] | None,
+        delete_edges_2: int | list[int] | None,
         curve: str = "curve",
     ) -> None:
         """
@@ -211,11 +210,11 @@ class Curves:
         :param curve_item_2: Name of curve item under Curves/`curve` to intersect with `curve_item_1`.
         :type curve_item_2: str
         :param delete_edges_1: Edge, or list of edges, of `curve_item_1` defined due to the curve intersection that
-            will be deleted by the Trim operation.
-        :type delete_edges_1: int | list[int]
+            will be deleted by the Trim operation. If `None`, no edge from this curve is deleted.
+        :type delete_edges_1: int | list[int] | None
         :param delete_edges_2: Edge, or list of edges, of `curve_item_1` defined due to the curve intersection that
-            will be deleted by the Trim operation.
-        :type delete_edges_2: int | list[int]
+            will be deleted by the Trim operation. If `None`, no edge from this curve is deleted.
+        :type delete_edges_2: int | list[int] | None
         :param curve: Name of the folder under Curves where the Ellipse is stored.
         :type curve: str (default="curve")
         """
@@ -230,14 +229,73 @@ class Curves:
         # Set the second curve item
         writer.write(text=f".CurveItem2 {VbaWriter.string_repr(text=curve_item_2)}\n")
         # Set the edges to trim for the first curve
-        writer.write(
-            text=f".DeleteEdges1 {num_or_list_of_nums_to_str(nums=delete_edges_1)}\n"
-        )
+        if delete_edges_1 is None:
+            writer.write(f'.DeleteEdges1 ""\n')
+        else:
+            writer.write(
+                text=f".DeleteEdges1 {num_or_list_of_nums_to_str(nums=delete_edges_1)}\n"
+            )
         # Set the edges to trim for the second curve
-        writer.write(
-            text=f".DeleteEdges2 {num_or_list_of_nums_to_str(nums=delete_edges_2)}\n"
-        )
+        if delete_edges_2 is None:
+            writer.write(f'.DeleteEdges2 ""\n')
+        else:
+            writer.write(
+                text=f".DeleteEdges2 {num_or_list_of_nums_to_str(nums=delete_edges_2)}\n"
+            )
         # Execute the Trim
         writer.write(text=".Trim\n")
         # End the `With` block
         writer.end_with()
+
+    @staticmethod
+    def NewCurve(writer: VbaWriter, curve: str, name: str | None = None) -> None:
+        """Create a new curve object called `curve` under the `Curve` folder, optionally
+        create a curve called `name` under the `curve` object.
+
+        See: https://space.mit.edu/RADIO/CST_online/mergedProjects/VBA_3D/common_vbacurves/common_vbacurves_curve_object.htm
+
+        :param writer: VBA IO handler.
+        :type writer: VbaWriter
+        :param curve: Name of the new curve object under the `Curve` folder.
+        :type curve: str
+        :param name: Name of the new curve under the curve object called `curve`. If this
+            parameter `None`, the default value, then only the curve object will be created.
+        :type name: str | None (default=None)
+        """
+        if name is None:
+            writer.write(f"Curve.NewCurve {VbaWriter.string_repr(text=curve)}\n")
+        else:
+            writer.write(
+                f"Curve.NewCurve {VbaWriter.string_repr(text=curve)}, {VbaWriter.string_repr(text=name)}\n"
+            )
+
+    @staticmethod
+    def DeleteCurve(writer: VbaWriter, curve: str) -> None:
+        """Delete the curve object called `curve` stored in the `Curves` folder.
+
+        See: https://space.mit.edu/RADIO/CST_online/mergedProjects/VBA_3D/common_vbacurves/common_vbacurves_curve_object.htm
+
+        :param writer: VBA IO handler
+        :type writer: VbaWriter
+        :param curve: Name of curve object under `Curve` folder.
+        :type curve: str
+        """
+        writer.write(f"Curve.DeleteCurve {VbaWriter.string_repr(text=curve)}\n")
+
+    @staticmethod
+    def DeleteCurveItem(writer: VbaWriter, name: str, curve: str = "curve") -> None:
+        """Delete the curve named `name` under the curve object `curve` in the
+        `Curves` folder.
+
+        See: https://space.mit.edu/RADIO/CST_online/mergedProjects/VBA_3D/common_vbacurves/common_vbacurves_curve_object.htm
+
+        :param writer: VBA IO handler
+        :type writer: VbaWriter
+        :param curve: Name of the curve object
+        :type curve: str
+        :param name: Name of the curve item inside the curve object.
+        :type name: str
+        """
+        writer.write(
+            f"Curve.DeleteCurveItem {VbaWriter.string_repr(text=curve)}, {VbaWriter.string_repr(text=name)}\n"
+        )
