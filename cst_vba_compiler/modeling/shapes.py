@@ -7,6 +7,45 @@ from ..utils import wrap_nonstr_in_double_quotes
 from ..writer import VbaWriter
 
 
+class Component(object):
+    @staticmethod
+    def New(writer: VbaWriter, name: str) -> None:
+        """Create a new component called `name` stored under the `Components` folder.
+
+        :param writer: VBA IO handler
+        :type writer: VbaWriter
+        :param name: Name of the component to create.
+        :type name: str
+        """
+        writer.write(f"Component.New {VbaWriter.string_repr(text=name)}\n")
+
+    @staticmethod
+    def Delete(writer: VbaWriter, name: str) -> None:
+        """Delete an existing component called `name` stored under the `Components` folder.
+
+        :param writer: VBA IO handler
+        :type writer: VbaWriter
+        :param name: Name of the component to delete.
+        :type name: str
+        """
+        writer.write(f"Component.Delete {VbaWriter.string_repr(text=name)}\n")
+
+    @staticmethod
+    def Rename(writer: VbaWriter, old_name: str, new_name: str) -> None:
+        """Rename an existing component called `old_name` to `new_name`.
+
+        :param writer: VBA IO handler
+        :type writer: VbaWriter
+        :param old_name: Name of the component to rename.
+        :type old_name: str
+        :param new_name: New name of the component,
+        :type new_name: str
+        """
+        writer.write(
+            f"Component.Rename {VbaWriter.string_repr(text=old_name)}, {VbaWriter.string_repr(text=new_name)}\n"
+        )
+
+
 class Faces(object):
     @staticmethod
     def Face(
@@ -215,5 +254,78 @@ class FromProfile2D(object):
         writer.end_with()
 
 
-# class Shapes(object):
-#     pass
+class Shapes(object):
+    @staticmethod
+    def Cylinder(
+        writer: VbaWriter,
+        name: str,
+        component: str,
+        material: str,
+        axis: str,
+        range_along_axis: tuple[float, float],
+        outer_radius: float,
+        inner_radius: float = 0.0,
+        center: tuple[float, float, float] = (0.0, 0.0, 0.0),
+        segments: int = 0,
+    ) -> None:
+        """Create a Cylinder solid called `name` under the component called `component`.
+
+        See: https://space.mit.edu/RADIO/CST_online/mergedProjects/VBA_3D/common_vbabasicsolids/common_vbacylinder_object.htm
+
+        :param writer: VBA IO handler
+        :type writer: VbaWriter
+        :param name: Name of the created Cylinder solid.
+        :type name: str
+        :param component: Name of the component under which the created solid is stored.
+        :type component: str
+        :param material: Material of the solid, the material name must exist beforehand.
+        :type material: str
+        :param axis: One of three options: {"x", "y", "z"} specifying the rotation axis of the cylinder
+        :type axis: str
+        :param range_along_axis: Interval along the rotation axis that signifies the start and end of the cylinder.
+        :type range_along_axis: tuple[float, float]
+        :param outer_radius: Set outer radius of the cylinder.
+        :type outer_radius: float
+        :param inner_radius: Set the inner radius of the cylinder.
+        :type inner_radius: float (default=0.0)
+        :param center: Set the center coordinate of the bottom of the cylinder.
+        :type center: tuple[float, float, float] (default=(0.0, 0.0, 0.0))
+        :param segments: Number of planer facets to represent the cylinder by. If this value is `0`, then the cylinder is viewed as a smooth analytical
+            surface.
+        :type segments: int (default=0)
+        """
+        assert axis in [
+            "x",
+            "y",
+            "z",
+        ], "Given argument for axis is not of the available options."
+        writer.start_with(structure="Cylinder")
+        writer.write(".Reset\n")
+        writer.write(f".Name {VbaWriter.string_repr(text=name)}\n")
+        writer.write(f".Component {VbaWriter.string_repr(text=component)}\n")
+        writer.write(f".Material {VbaWriter.string_repr(text=material)}\n")
+        writer.write(f".Axis {VbaWriter.string_repr(text=axis)}\n")
+        writer.write(
+            f".Outerradius {wrap_nonstr_in_double_quotes(value=outer_radius)}\n"
+        )
+        writer.write(
+            f".Innerradius {wrap_nonstr_in_double_quotes(value=inner_radius)}\n"
+        )
+        writer.write(f".Xcenter {wrap_nonstr_in_double_quotes(value=center[0])}\n")
+        writer.write(f".Ycenter {wrap_nonstr_in_double_quotes(value=center[1])}\n")
+        writer.write(f".Zcenter {wrap_nonstr_in_double_quotes(value=center[2])}\n")
+        if axis == "x":
+            writer.write(
+                f".Xrange {wrap_nonstr_in_double_quotes(value=range_along_axis[0])}, {wrap_nonstr_in_double_quotes(value=range_along_axis[1])}\n"
+            )
+        elif axis == "y":
+            writer.write(
+                f".Yrange {wrap_nonstr_in_double_quotes(value=range_along_axis[0])}, {wrap_nonstr_in_double_quotes(value=range_along_axis[1])}\n"
+            )
+        else:
+            writer.write(
+                f".Zrange {wrap_nonstr_in_double_quotes(value=range_along_axis[0])}, {wrap_nonstr_in_double_quotes(value=range_along_axis[1])}\n"
+            )
+        writer.write(f".Segments {wrap_nonstr_in_double_quotes(value=segments)}\n")
+        writer.write(".Create\n")
+        writer.end_with()
