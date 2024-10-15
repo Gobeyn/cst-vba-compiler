@@ -109,7 +109,6 @@ class VbaWriter(object):
         the call of `start_main` method and this method is contained within the main loop of the VBA script.
         The scope is set back to `None`
         """
-        self.write(text="Save\n")
         self.__indent_depth -= 1
         self.write(text="End Sub\n")
         self.__current_scope = None
