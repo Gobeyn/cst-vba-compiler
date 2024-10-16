@@ -15,4 +15,6 @@ def SelectTreeItem(writer: VbaWriter, tree_path: str) -> None:
     :param tree_path: Path within the CST tree to the desired item to select.
     :type tree_path: str
     """
-    writer.write(f"SelectTreeItem {VbaWriter.string_repr(text=tree_path)}\n")
+    writer.write(
+        f"SelectTreeItem {VbaWriter.string_repr(text=tree_path).replace("\\\\", "\\")}\n"
+    )
