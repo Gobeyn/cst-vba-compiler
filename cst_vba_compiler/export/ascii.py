@@ -11,13 +11,14 @@ from ..writer import VbaWriter
 def ASCIIExport(
     writer: VbaWriter,
     export_path: str,
-    data_mode: str,
+    data_mode: str | None = None,
     file_type: str = "ascii",
     step: int | float | None = None,
     step_directional: list[int] | list[float] | None = None,
     subvolume: list[tuple[float, float]] | None = None,
     use_subvolume: bool = False,
     use_meter: bool = False,
+    csv_separator: str | None = None,
 ) -> None:
     """
     Export a selected tree item as ASCII, CSV or HDF5 data.
@@ -29,8 +30,9 @@ def ASCIIExport(
     :type export_path: str
     :param data_mode: Mode to use when sampling the data, this can be either 'FixedNumber' which will export
         a fixed number of samples, or "FixedWidth" which fixes the step with of the sample. To set either
-        the number or width, see the `step` and `step_directional` parameters.
-    :type data_mode: str
+        the number or width, see the `step` and `step_directional` parameters. Note that this setting is
+        only available when exporting 2D/3D field results.
+    :type data_mode: str | None (default=None)
     :param file_type: Format of the exported data, options are "ascii", "csv" and "hdf5".
     :type file_type: str (default="ascii")
     :param step: Depending on the `data_mode` setting, it is either interpreted as the number of samples
@@ -50,11 +52,14 @@ def ASCIIExport(
     :param use_meter: If `True`, coordinates are exported in meter, otherwise the project units are used. Note that this is
         only available for 2D/3D exports.
     :type use_meter: bool (default=False)
+    :param csv_separator: Separator for csv file formats, this is only available for 2D/3D exports.
+    :type csv_separator: str (default=",")
     """
-    assert data_mode in [
-        "FixedNumber",
-        "FixedWidth",
-    ], "Provided data mode is not of the supported options."
+    if data_mode is not None:
+        assert data_mode in [
+            "FixedNumber",
+            "FixedWidth",
+        ], "Provided data mode is not of the supported options."
     assert file_type in [
         "ascii",
         "csv",
@@ -65,7 +70,8 @@ def ASCIIExport(
     writer.write(".Reset\n")
     writer.write(f".FileName {VbaWriter.string_repr(text=export_path)}\n")
     writer.write(f".SetfileType {VbaWriter.string_repr(text=file_type)}\n")
-    writer.write(f".Mode {VbaWriter.string_repr(text=data_mode)}\n")
+    if data_mode is not None:
+        writer.write(f".Mode {VbaWriter.string_repr(text=data_mode)}\n")
     if step is not None:
         writer.write(f".Step {wrap_nonstr_in_double_quotes(value=step)}\n")
     if step_directional is not None:
@@ -86,5 +92,7 @@ def ASCIIExport(
     writer.write(
         f".ExportCoordinatesInMeter {wrap_nonstr_in_double_quotes(value=use_meter)}\n"
     )
+    if csv_separator is not None:
+        writer.write(f".SetCsvSeparator {VbaWriter.string_repr(text=csv_separator)}\n")
     writer.write(".Execute\n")
     writer.end_with()
