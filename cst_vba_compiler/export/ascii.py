@@ -15,12 +15,41 @@ def ASCIIExport(
     file_type: str = "ascii",
     step: int | float | None = None,
     step_directional: list[int] | list[float] | None = None,
-    subvolume: list[tuple[int | float, int | float]] | None = None,
+    subvolume: list[tuple[float, float]] | None = None,
     use_subvolume: bool = False,
+    use_meter: bool = False,
 ) -> None:
     """
-
+    Export a selected tree item as ASCII, CSV or HDF5 data.
     See https://space.mit.edu/RADIO/CST_online/mergedProjects/VBA_3D/common_vbaimpexp/asciiexport_object.htm
+
+    :param writer: VBA IO handler
+    :type writer: VbaWriter
+    :param export_path: Path to export the data to, take care with the file extension.
+    :type export_path: str
+    :param data_mode: Mode to use when sampling the data, this can be either 'FixedNumber' which will export
+        a fixed number of samples, or "FixedWidth" which fixes the step with of the sample. To set either
+        the number or width, see the `step` and `step_directional` parameters.
+    :type data_mode: str
+    :param file_type: Format of the exported data, options are "ascii", "csv" and "hdf5".
+    :type file_type: str (default="ascii")
+    :param step: Depending on the `data_mode` setting, it is either interpreted as the number of samples
+        in each direction, or the width in each direction. Note that this setting is only available when
+        exporting 2D/3D field results.
+    :type step: int | float | None (default=None)
+    :param step_directional: Same as step, but each Cartesian direction is specified separately in a list ordered
+        as [x,y,z].
+    :type step_directional: list[int] | list[float] | None (default=None)
+    :param subvolume: Defines volume to evaluate results as bounds in the Cartesian directions, e.g.
+        $[(x_{min}, x_{max}), (y_{min}, y_{max}), (z_{min}, z_{max})]$. Note that this is only available for
+        2D/3D field results.
+    :type subvolume: list[tuple[float, float]] | None (default=None)
+    :param use_subvolume: If set to `True` the sub-volume defined in `subvolume` is used instead of the entire structure
+        volume.
+    :type use_subvolume: bool (default=False)
+    :param use_meter: If `True`, coordinates are exported in meter, otherwise the project units are used. Note that this is
+        only available for 2D/3D exports.
+    :type use_meter: bool (default=False)
     """
     assert data_mode in [
         "FixedNumber",
@@ -54,6 +83,8 @@ def ASCIIExport(
             f".SetSubvolume {wrap_nonstr_in_double_quotes(value=subvolume[0][0])}, {wrap_nonstr_in_double_quotes(value=subvolume[0][1])}, {wrap_nonstr_in_double_quotes(value=subvolume[1][0])}, {wrap_nonstr_in_double_quotes(value=subvolume[1][1])}, {wrap_nonstr_in_double_quotes(value=subvolume[2][0])}, {wrap_nonstr_in_double_quotes(value=subvolume[2][1])}\n"
         )
     writer.write(f".UseSubvolume {wrap_nonstr_in_double_quotes(value=use_subvolume)}\n")
-
+    writer.write(
+        f".ExportCoordinatesInMeter {wrap_nonstr_in_double_quotes(value=use_meter)}\n"
+    )
     writer.write(".Execute\n")
     writer.end_with()
