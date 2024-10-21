@@ -19,4 +19,4 @@ class General(object):
         :param disable: Disable user interaction of `True`.
         :type disable: bool (default=False)
         """
-        writer.write(f"SetLock {wrap_nonstr_in_double_quotes(value=disable)}")
+        writer.write(f"SetLock {wrap_nonstr_in_double_quotes(value=disable)}\n")
